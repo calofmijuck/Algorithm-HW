@@ -60,11 +60,13 @@ private:
     void updateSize(Node* node); // update size
     Node* replace(Node* node); // find node to replace node when deleting node
     void insertFixUp(Node* node); // Fix tree on insert
+    void leftRotate(Node* node); // left rotation
+    void rightRotate(Node* node); // right rotation
+    void transplant(Node* u, Node* v);
+    void deleteFixUp(Node* node); // Fix tree on delete
 
     // Todo
     Node* deleteNode(Node* node); // delete node from the tree
-    void leftRotate(Node* node); // left rotation
-    void rightRotate(Node* node); // right rotation
 public:
     // Node* insert(Node* root, Node* newNode); // Insert newNode at subtree rooted at root
     Tree() { root = NULL; } // Constructor
@@ -271,24 +273,88 @@ int Tree::deleteVal(int x) {
 }
 
 // find node to replace node when deleting node
-Node* Tree::replace(Node* node) {
-    if(node -> left) {
-        if(node -> right) { // node has 2 children
-            // return least element in right subtree
-            Node* tmp = node -> right;
-            while(tmp -> left) tmp = tmp -> left;
-            return tmp;
-        } else { // has only left child
-            return node -> left;
-        }
-    } else if(node -> right) { // has only right child
-        return node -> right;
-    } else return NULL; // leaf
+// Node* Tree::replace(Node* node) {
+//     if(node -> left) {
+//         if(node -> right) { // node has 2 children
+//             // return least element in right subtree
+//             Node* tmp = node -> right;
+//             while(tmp -> left) tmp = tmp -> left;
+//             return tmp;
+//         } else { // has only left child
+//             return node -> left;
+//         }
+//     } else if(node -> right) { // has only right child
+//         return node -> right;
+//     } else return NULL; // leaf
+// }
+
+// Replace the subtree rooted at node u with the subtree rooted at node v
+void Tree::transplant(Node* u, Node* v) {
+    if(u -> parent == NULL) root = v;
+    else if(u -> isLeftChild()) u -> parent -> left = v;
+    else u -> parent -> right = v;
+    // if(v != NULL)
+    v -> parent = u -> parent;
 }
 
 // Delete node with node from the tree, do fixups
 Node* Tree::deleteNode(Node* node) {
-    Node* tmp = replace(node); // find node to replace
+    Node* tmp = node;
+    Node* v;
+    Node* nil = new Node(-1); // node for nil
+    nil -> size = 0;
+    bool orig_color = node -> color;
+
+    if(node -> left == NULL) { // no left child
+        v = node -> right; // v may be null here
+        if(v == NULL) {
+            v = nil;
+            node -> right = nil;
+            nil -> parent = node;
+        }
+        transplant(node, node -> right); // replace with right child
+    } else if(node -> right == NULL) { // no right child
+        v = node -> left; // not null here
+        transplant(node, node -> left); // replace with left child
+    } else { // node has both child
+        // get minimum element from the right subtree
+        tmp = node -> right;
+        while(tmp -> left) tmp = tmp -> left;
+        orig_color = tmp -> color; // tmp is not null
+
+        v = tmp -> right; // v may be null here
+        if(v == NULL) {
+            tmp -> right = nil;
+            v = nil;
+            nil -> parent = tmp;
+        }
+        if(tmp -> parent == node) { // right subtree of node has no left child
+            if(v != NULL) v -> parent = tmp;  // Does nothing ???
+        } else {
+            transplant(tmp, tmp -> right); // replace
+            // Set right subtree of tmp as right subtree of node
+            tmp -> right = node -> right;
+            tmp -> right -> parent = tmp;
+        }
+        transplant(node, tmp); // replace node with tmp
+        // Set left subtree of tmp as left subtree of node
+        tmp -> left = node -> left;
+        tmp -> left -> parent = tmp;
+        tmp -> color = node -> color; // update color
+    }
+    delete node;
+    updateSize(v);
+    if(v -> isLeftChild()) {
+        v -> parent -> left = NULL;
+    } else {
+        v -> parent -> right = NULL;
+    }
+    nil = 0;
+    delete nil;
+
+
+    if(orig_color == BLACK) deleteFixUp(v);
+    // Node* tmp = replace(node); // find node to replace
 
     // // check black-black
     // bool blackflag = ((tmp == NULL || tmp -> color == BLACK) && (node -> color == BLACK));
@@ -311,8 +377,14 @@ Node* Tree::deleteNode(Node* node) {
     return tmp;
 }
 
+// Fix tree on deletion
+void Tree::deleteFixUp(Node* node) {
+
+}
+
 // Update sizes
 void Tree::updateSize(Node* node) {
+    if(node == NULL) return;
     Node* tmp = node -> parent;
     while(tmp) { // while tmp != NULL
         int nsize = 1;
