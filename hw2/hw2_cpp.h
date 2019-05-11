@@ -1,4 +1,5 @@
 #include <cstdio>
+#include <assert.h>
 
 #ifndef HW2
 #define HW2
@@ -18,41 +19,195 @@ struct Node {
         color = RED; // default color red
         size = 1;
     }
+
+    Node* uncle() {
+        // if no parent or grandparent, uncle is NULL
+        if(parent == NULL || parent -> parent == NULL) return NULL;
+
+        // Check parent is left child of grandparent
+        if(parent -> isLeftChild()) {
+            // uncle is the right child of grandparent
+            return parent -> parent -> right;
+        } else {
+            // uncle is the left child of grandparent
+            return parent -> parent -> left;
+        }
+    }
+
+    // Checks if self is the left child of parent
+    bool isLeftChild() { return this == parent -> left; }
+
+    Node* sibling() { // returns pointer to sibling
+        if(parent == NULL) return NULL;
+        if(isLeftChild()) return parent -> right;
+        return parent -> left;
+    }
+
+    // pull the node down and set newParent in its place
+    void moveDown(Node* newParent) {
+        if(parent != NULL) {
+            if(isLeftChild()) parent -> left = newParent;
+            else parent -> right = newParent;
+        }
+        newParent -> parent = parent;
+        parent = newParent;
+    } // don't have to update sizes here
 };
 
 class Tree {
-// private:
-public:
+private:
     Node *root;
+    void updateSize(Node* node); // update size
+    Node* replace(Node* node); // find node to replace node when deleting node
+    void insertFixUp(Node* node); // Fix tree on insert
+
+    // Todo
+    Node* deleteNode(Node* node); // delete node from the tree
+    void leftRotate(Node* node); // left rotation
+    void rightRotate(Node* node); // right rotation
+public:
     // Node* insert(Node* root, Node* newNode); // Insert newNode at subtree rooted at root
-    Node* fixRedRed(Node* node);
     Tree() { root = NULL; } // Constructor
+    Node* getRoot(); // return root
     int insert(int x); // Insert x
     Node* search(int x); // search for x
-    void updateSize(Node* node);
+    int deleteVal(int x); // delete node with key x
     void inOrder(Node* node); // print inorder traversal starting at node
 };
 
 //////////////////////////////////////////////////////////////////////////////////////
 
-// Insert newNode at subtree rooted at root
-// Node* Tree::insert(Node* root, Node* newNode) {
-//     if(root == NULL) {
-//         newNode -> color = RED;
-//         return newNode;
-//     }
-//     if(newNode -> data < root -> data) {
-//         root -> left = insert(root -> left, newNode);
-//         root -> left -> parent = root;
-//     } else if(newNode -> data > root -> data) {
-//         root -> right = insert(root -> right, newNode);
-//         root -> right -> parent = root;
-//     }
-//     return root;
-// }
+Node* Tree::getRoot() {
+    return root;
+}
+
+/* Insert newNode at subtree rooted at root
+Node* Tree::insert(Node* root, Node* newNode) {
+    if(root == NULL) {
+        newNode -> color = RED;
+        return newNode;
+    }
+    if(newNode -> data < root -> data) {
+        root -> left = insert(root -> left, newNode);
+        root -> left -> parent = root;
+    } else if(newNode -> data > root -> data) {
+        root -> right = insert(root -> right, newNode);
+        root -> right -> parent = root;
+    }
+    return root;
+}
+//*/
+
+// Swap node colors of u and v
+void swapColor(Node* u, Node* v) {
+    bool tmp;
+    tmp = u -> color;
+    u -> color = v -> color;
+    v -> color = tmp;
+}
+
+// Left Rotation
+void Tree::leftRotate(Node* node) {
+    Node* newParent = node -> right;
+    int tmp = node -> size;
+
+    // root needs to be updated in this case
+    if(node == root) root = newParent;
+
+    node -> moveDown(newParent);
+
+    // left subtree of newParent should be the right subtree of node
+    node -> right = newParent -> left;
+
+    // update size
+    node -> size = node -> left -> size + node -> right -> size + 1;
+
+    // set node as parent if not null
+    if(newParent -> left != NULL) newParent -> left -> parent = node;
+
+    // set left subtree of newParent as node
+    newParent -> left = node;
+
+    // update size
+    newParent -> size = node -> size + newParent -> right -> size + 1;
+
+    assert(tmp == newParent -> size);
+}
+
+// Right Rotation
+void Tree::rightRotate(Node* node) {
+    Node* newParent = node -> left;
+    int tmp = node -> size;
+
+    // root needs to be updated in this case
+    if(node == root) root = newParent;
+
+    node -> moveDown(newParent);
+
+    // right subtree of newParent should be the left subtree of node
+    node -> left = newParent -> right;
+
+    // update size
+    node -> size = node -> right -> size + node -> left -> size + 1;
+
+    // set node as parent if not null
+    if(newParent -> right != NULL) newParent -> right -> parent = node;
+
+    // set right subtree of newParent as node
+    newParent -> right = node;
+
+    // update size
+    newParent -> size = node -> size + newParent -> left -> size + 1;
+
+    assert(tmp == newParent -> size);
+}
+
+
+// Fix the tree on insert
+void Tree::insertFixUp(Node *node) {
+    if(node == root) { // if root, color it black and return
+        printf("??? insertFixUp(root) has been called!\n");
+        node -> color = BLACK;
+        return;
+    }
+
+    Node* parent = node -> parent;
+    Node* grand = parent -> parent;
+    Node *uncle = node -> uncle();
+
+    // grandparent is not null
+    // if grandparent is null, parent must have been root
+    // which is black, and this if-then clause is not executed
+    if(parent -> color != BLACK) { // only if parent color is red
+        if(uncle != NULL && uncle -> color == RED) { // case 1
+            parent -> color = BLACK;
+            uncle -> color = BLACK;
+            grand -> color = RED;
+            insertFixUp(grand);
+        } else {
+            if(parent -> isLeftChild()) { // parent is on left
+                if(node -> isLeftChild()) { // node is left child
+                    swapColor(parent, grand);
+                } else { // node is right child
+                    leftRotate(parent);
+                    swapColor(node, grand);
+                }
+                rightRotate(grand);
+            } else { // parent is on right
+                if(node -> isLeftChild()) { // node is left child
+                    rightRotate(parent);
+                    swapColor(node, grand);
+                } else { // node is right child
+                    swapColor(parent, grand);
+                }
+                leftRotate(grand);
+            }
+        }
+    }
+}
 
 // Insert x to the tree
-// if insert is successful, return 0
+// if insert is successful, return x
 // else return 0
 int Tree::insert(int x) {
     Node* newNode = new Node(x);
@@ -76,7 +231,7 @@ int Tree::insert(int x) {
     updateSize(newNode);
 
     // fix Red-Red at newNode
-    // fixRedRed(newNode);
+    insertFixUp(newNode);
 
     return x;
 }
@@ -98,6 +253,65 @@ Node* Tree::search(int x) {
     return tmp;
 }
 
+// Delete x from the tree
+// if delete is successful, return x
+// else return 0
+int Tree::deleteVal(int x) {
+    if(root == NULL) return 0; // empty tree
+
+    // Search for node with key x
+    Node* del = search(x);
+
+    // Note that search does not return NULL
+    if(del -> data != x) return 0; // delete fails
+
+    deleteNode(del); // delete node and fix up colors here
+
+    return x;
+}
+
+// find node to replace node when deleting node
+Node* Tree::replace(Node* node) {
+    if(node -> left) {
+        if(node -> right) { // node has 2 children
+            // return least element in right subtree
+            Node* tmp = node -> right;
+            while(tmp -> left) tmp = tmp -> left;
+            return tmp;
+        } else { // has only left child
+            return node -> left;
+        }
+    } else if(node -> right) { // has only right child
+        return node -> right;
+    } else return NULL; // leaf
+}
+
+// Delete node with node from the tree, do fixups
+Node* Tree::deleteNode(Node* node) {
+    Node* tmp = replace(node); // find node to replace
+
+    // // check black-black
+    // bool blackflag = ((tmp == NULL || tmp -> color == BLACK) && (node -> color == BLACK));
+    // Node* parent = node -> parent;
+    //
+    // if(tmp == NULL) {
+    //     // tmp is NULL, so node must be leaf
+    //     if(node == root) root = NULL;
+    //     else {
+    //         if(blackflag) {
+    //             fixBlackBlack(node);
+    //         } else {
+    //             if(node.sibling() != NULL) {
+    //                 node.sibling() -> color = RED;
+    //             }
+    //         }
+    //     }
+    // }
+
+    return tmp;
+}
+
+// Update sizes
 void Tree::updateSize(Node* node) {
     Node* tmp = node -> parent;
     while(tmp) { // while tmp != NULL
@@ -109,7 +323,7 @@ void Tree::updateSize(Node* node) {
     }
 }
 
-// Inorder traversal, for debuggin purposes
+// Inorder traversal, for debugging purposes
 void Tree::inOrder(Node* node) {
     if(node == NULL) return;
     inOrder(node -> left);
@@ -142,17 +356,17 @@ void init() { // initialize
 }
 
 // Insert x to the tree
-// if insert is successful, return 0
+// if insert is successful, return x
 // else return 0
 int os_insert(int x) {
     return tree.insert(x);
 }
 
 // Delete x from the tree
-// if delete is successful, return 0
+// if delete is successful, return x
 // else return 0
 int os_delete(int x) {
-    return -1;
+    return tree.deleteVal(x);
 }
 
 int os_select(int i) { // select i-th element
