@@ -1,0 +1,4 @@
+# Run Tester
+python3 tester.py
+g++ test.cpp -o test
+./test
