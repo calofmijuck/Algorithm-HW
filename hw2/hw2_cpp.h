@@ -133,7 +133,13 @@ void Tree::leftRotate(Node* node) {
     node -> right = newParent -> left;
 
     // update size
-    node -> size = node -> left -> size + node -> right -> size + 1;
+    node -> size = 1;
+    if(node -> left) {
+        node -> size += node -> left -> size;
+    }
+    if(node -> right) {
+        node -> size += node -> right -> size;
+    }
 
     // set node as parent if not null
     if(newParent -> left != NULL) newParent -> left -> parent = node;
@@ -142,7 +148,10 @@ void Tree::leftRotate(Node* node) {
     newParent -> left = node;
 
     // update size
-    newParent -> size = node -> size + newParent -> right -> size + 1;
+    newParent -> size = node -> size + 1;
+    if(newParent -> right) {
+        newParent -> size += newParent -> right -> size;
+    }
 
     assert(tmp == newParent -> size);
 }
@@ -161,7 +170,13 @@ void Tree::rightRotate(Node* node) {
     node -> left = newParent -> right;
 
     // update size
-    node -> size = node -> right -> size + node -> left -> size + 1;
+    node -> size = 1;
+    if(node -> right) {
+        node -> size += node -> right -> size;
+    }
+    if(node -> left) {
+        node -> size += node -> left -> size;
+    }
 
     // set node as parent if not null
     if(newParent -> right != NULL) newParent -> right -> parent = node;
@@ -170,7 +185,10 @@ void Tree::rightRotate(Node* node) {
     newParent -> right = node;
 
     // update size
-    newParent -> size = node -> size + newParent -> left -> size + 1;
+    newParent -> size = node -> size + 1;
+    if(newParent -> left) {
+        newParent -> size += newParent -> left -> size;
+    }
 
     assert(tmp == newParent -> size);
 }
@@ -179,7 +197,7 @@ void Tree::rightRotate(Node* node) {
 // Fix the tree on insert
 void Tree::insertFixUp(Node *node) {
     if(node == root) { // if root, color it black and return
-        printf("??? insertFixUp(root) has been called!\n");
+        // printf("??? insertFixUp(root) has been called!\n");
         node -> color = BLACK;
         return;
     }
