@@ -1,4 +1,6 @@
 #include <cstdio>
+#include <iostream>
+using namespace std;
 #include <assert.h>
 
 #ifndef HW2
@@ -52,6 +54,14 @@ struct Node {
         newParent -> parent = parent;
         parent = newParent;
     } // don't have to update sizes here
+
+    bool bothBlack() {
+        if(this -> left && this -> right) {
+            if((this -> left -> color == BLACK) &&
+                (this -> right -> color == BLACK)) return true;
+        }
+        return false;
+    }
 };
 
 class Tree {
@@ -63,10 +73,10 @@ private:
     void leftRotate(Node* node); // left rotation
     void rightRotate(Node* node); // right rotation
     void transplant(Node* u, Node* v);
-    void deleteFixUp(Node* node); // Fix tree on delete
+    void deleteNode(Node* node); // delete node from the tree
 
     // Todo
-    Node* deleteNode(Node* node); // delete node from the tree
+    void deleteFixUp(Node* node); // Fix tree on delete
 public:
     // Node* insert(Node* root, Node* newNode); // Insert newNode at subtree rooted at root
     Tree() { root = NULL; } // Constructor
@@ -75,6 +85,7 @@ public:
     Node* search(int x); // search for x
     int deleteVal(int x); // delete node with key x
     void inOrder(Node* node); // print inorder traversal starting at node
+    void printSideways(Node* node, string& indent);
 };
 
 //////////////////////////////////////////////////////////////////////////////////////
@@ -272,38 +283,43 @@ int Tree::deleteVal(int x) {
     return x;
 }
 
-// find node to replace node when deleting node
-// Node* Tree::replace(Node* node) {
-//     if(node -> left) {
-//         if(node -> right) { // node has 2 children
-//             // return least element in right subtree
-//             Node* tmp = node -> right;
-//             while(tmp -> left) tmp = tmp -> left;
-//             return tmp;
-//         } else { // has only left child
-//             return node -> left;
-//         }
-//     } else if(node -> right) { // has only right child
-//         return node -> right;
-//     } else return NULL; // leaf
-// }
+/* find node to replace node when deleting node
+Node* Tree::replace(Node* node) {
+    if(node -> left) {
+        if(node -> right) { // node has 2 children
+            // return least element in right subtree
+            Node* tmp = node -> right;
+            while(tmp -> left) tmp = tmp -> left;
+            return tmp;
+        } else { // has only left child
+            return node -> left;
+        }
+    } else if(node -> right) { // has only right child
+        return node -> right;
+    } else return NULL; // leaf
+}
+//*/
 
 // Replace the subtree rooted at node u with the subtree rooted at node v
 void Tree::transplant(Node* u, Node* v) {
     if(u -> parent == NULL) root = v;
-    else if(u -> isLeftChild()) u -> parent -> left = v;
+    else if(u -> isLeftChild()) {
+        u -> parent -> left = v;
+        // if(v -> data == 13) printf("!!!\n");
+    }
     else u -> parent -> right = v;
     // if(v != NULL)
     v -> parent = u -> parent;
 }
 
 // Delete node with node from the tree, do fixups
-Node* Tree::deleteNode(Node* node) {
+void Tree::deleteNode(Node* node) {
     Node* tmp = node;
     Node* v;
     Node* nil = new Node(-1); // node for nil
     nil -> size = 0;
     bool orig_color = node -> color;
+    bool flagv = false; // checks v was null
 
     if(node -> left == NULL) { // no left child
         v = node -> right; // v may be null here
@@ -311,6 +327,7 @@ Node* Tree::deleteNode(Node* node) {
             v = nil;
             node -> right = nil;
             nil -> parent = node;
+            flagv = true;
         }
         transplant(node, node -> right); // replace with right child
     } else if(node -> right == NULL) { // no right child
@@ -327,6 +344,7 @@ Node* Tree::deleteNode(Node* node) {
             tmp -> right = nil;
             v = nil;
             nil -> parent = tmp;
+            flagv = true;
         }
         if(tmp -> parent == node) { // right subtree of node has no left child
             if(v != NULL) v -> parent = tmp;  // Does nothing ???
@@ -343,43 +361,98 @@ Node* Tree::deleteNode(Node* node) {
         tmp -> color = node -> color; // update color
     }
     delete node;
-    updateSize(v);
-    if(v -> isLeftChild()) {
-        v -> parent -> left = NULL;
-    } else {
-        v -> parent -> right = NULL;
-    }
-    nil = 0;
-    delete nil;
 
+    updateSize(v); // update sizes
+
+    if(flagv) {
+        if(v -> isLeftChild()) {
+            v -> parent -> left = NULL;
+        } else {
+            v -> parent -> right = NULL;
+        }
+
+    }
+
+    nil = 0;
+    delete nil; // delete temporary nil node
 
     if(orig_color == BLACK) deleteFixUp(v);
-    // Node* tmp = replace(node); // find node to replace
-
-    // // check black-black
-    // bool blackflag = ((tmp == NULL || tmp -> color == BLACK) && (node -> color == BLACK));
-    // Node* parent = node -> parent;
-    //
-    // if(tmp == NULL) {
-    //     // tmp is NULL, so node must be leaf
-    //     if(node == root) root = NULL;
-    //     else {
-    //         if(blackflag) {
-    //             fixBlackBlack(node);
-    //         } else {
-    //             if(node.sibling() != NULL) {
-    //                 node.sibling() -> color = RED;
-    //             }
-    //         }
-    //     }
-    // }
-
-    return tmp;
 }
 
 // Fix tree on deletion
 void Tree::deleteFixUp(Node* node) {
+    if(node == root || node -> color == RED) {
+        node -> color = BLACK;
+        return;
+    }
+    Node* sibling = node -> sibling();
+    Node* parent = node -> parent;
 
+    if(sibling == NULL) {
+        printf("Is sibling ever NULL?\n");
+        return;
+    }
+
+    if(node -> color == BLACK) {
+        if(node -> isLeftChild()) {
+            if(sibling -> color == RED) { // Case 1
+                sibling -> color = BLACK;
+                parent -> color = RED;
+                leftRotate(parent);
+                sibling = node -> parent -> right;
+            }
+            if(sibling -> bothBlack()) { // Case 2
+                sibling -> color = RED;
+                deleteFixUp(parent);
+            } else {
+                if(sibling -> right) {
+                    if(sibling -> right -> color == BLACK) { // Case 3
+                        if(sibling -> left) {
+                            sibling -> left -> color = BLACK;
+                        }
+                        sibling -> color = RED;
+                        rightRotate(sibling);
+                        sibling = node -> parent -> right;
+                    }
+                }
+                sibling -> color = node -> parent -> color; // Case 4
+                node -> parent -> color = BLACK;
+                if(sibling -> right) { // right may be null
+                    sibling -> right -> color = BLACK;
+                }
+                leftRotate(node -> parent);
+            }
+        } else {
+            if(sibling -> color == RED) { // Case 1
+                sibling -> color = BLACK;
+                parent -> color = RED;
+                rightRotate(parent);
+                sibling = node -> parent -> left;
+            }
+            if(sibling -> bothBlack()) { // Case 2
+                sibling -> color = RED;
+                deleteFixUp(parent);
+            } else {
+                if(sibling -> left) {
+                    if(sibling -> left -> color == BLACK) { // Case 3
+                        if(sibling -> right) {
+                            sibling -> right -> color = BLACK;
+                        }
+                        sibling -> color = RED;
+                        leftRotate(sibling);
+                        sibling = node -> parent -> left;
+                    }
+                }
+                sibling -> color = node -> parent -> color; // Case 4
+                node -> parent -> color = BLACK;
+                if(sibling -> left) { // right may be null
+                    sibling -> left -> color = BLACK;
+                }
+                rightRotate(node -> parent);
+            }
+        }
+    }
+    node -> color = BLACK;
 }
 
 // Update sizes
@@ -415,8 +488,28 @@ void Tree::inOrder(Node* node) {
     } else {
         printf("R:  NULL, ");
     }
-    printf("size: %5d, color: %s\n", node -> size, str[node -> color]);
+    printf("size: %5d, ", node -> size);
+    if(node -> color == RED) {
+        printf("color: \033[1;31m%s\033[0m\n", str[node -> color]);
+    } else {
+        printf("color: \033[1;30m%s\033[0m\n", str[node -> color]);
+    }
     inOrder(node -> right);
+}
+
+void Tree::printSideways(Node* node, string& indent) {
+    string str = indent + "    ";
+    if(node != NULL) {
+        printSideways(node -> right, str);
+        if(node -> color == RED) {
+            cout << indent;
+            printf("\033[1;31m(%d)\033[0m\n", node -> data);
+        } else {
+            cout << indent;
+            printf("\033[1;30m(%d)\033[0m\n", node -> data);
+        }
+        printSideways(node -> left, str);
+    }
 }
 
 //////////////////////////////////////////////////////////////////
