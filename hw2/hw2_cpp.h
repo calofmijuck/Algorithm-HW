@@ -86,6 +86,8 @@ public:
     int deleteVal(int x); // delete node with key x
     void inOrder(Node* node); // print inorder traversal starting at node
     void printSideways(Node* node, string& indent);
+    int rank(int x);
+    int select(int i);
 };
 
 //////////////////////////////////////////////////////////////////////////////////////
@@ -516,20 +518,65 @@ void Tree::inOrder(Node* node) {
 }
 
 void Tree::printSideways(Node* node, string& indent) {
-    string str = indent + "    ";
+    string str = indent + "        ";
     if(node != NULL) {
         printSideways(node -> right, str);
         if(node -> color == RED) {
             cout << indent;
-            printf("\033[1;31m(%d)\033[0m\n", node -> data);
+            printf("\033[1;31m(%d / %d)\033[0m\n", node -> data, node -> size);
         } else {
             cout << indent;
-            printf("\033[1;30m(%d)\033[0m\n", node -> data);
+            printf("\033[1;30m(%d / %d)\033[0m\n", node -> data, node -> size);
         }
         printSideways(node -> left, str);
     }
 }
 
+int Tree::rank(int x) {
+    Node* u = search(x);
+
+    if(u == NULL || u -> data != x) { // x is not in the tree
+        return 0;
+    }
+
+    int ret = 1;
+    if(u -> left != NULL) {
+        ret += u -> left -> size;
+    }
+    while(u != root) { // walk up to root
+        if(!(u -> isLeftChild())) {
+            ret += 1;
+            if(u -> parent -> left != NULL) { // if right child
+                ret += u -> parent -> left -> size;
+            }
+        }
+        u = u -> parent;
+    }
+    return ret;
+}
+
+int Tree::select(int i) {
+    if(root -> size < i) return 0; // No i-th element
+
+    Node* u = root;
+
+    while(1) {
+        if(u == NULL) printf("u might be null!\n");
+        int rank = 1;
+        if(u -> left != NULL) {
+            rank += u -> left -> size;
+        }
+        if(i == rank) return u -> data;
+        else if(i < rank) {
+            u = u -> left;
+        } else {
+            u = u -> right;
+            i -= rank;
+        }
+    }
+    printf("Does control ever reach here?\n");
+    return 0;
+}
 //////////////////////////////////////////////////////////////////
 
 Tree tree;
