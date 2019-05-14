@@ -1,5 +1,7 @@
 #include <cstdio>
 #include <iostream>
+#include <vector>
+#include <algorithm>
 using namespace std;
 #include <assert.h>
 
@@ -95,23 +97,6 @@ public:
 Node* Tree::getRoot() {
     return root;
 }
-
-/* Insert newNode at subtree rooted at root
-Node* Tree::insert(Node* root, Node* newNode) {
-    if(root == NULL) {
-        newNode -> color = RED;
-        return newNode;
-    }
-    if(newNode -> data < root -> data) {
-        root -> left = insert(root -> left, newNode);
-        root -> left -> parent = root;
-    } else if(newNode -> data > root -> data) {
-        root -> right = insert(root -> right, newNode);
-        root -> right -> parent = root;
-    }
-    return root;
-}
-//*/
 
 // Swap node colors of u and v
 void swapColor(Node* u, Node* v) {
@@ -303,23 +288,6 @@ int Tree::deleteVal(int x) {
     return x;
 }
 
-/* find node to replace node when deleting node
-Node* Tree::replace(Node* node) {
-    if(node -> left) {
-        if(node -> right) { // node has 2 children
-            // return least element in right subtree
-            Node* tmp = node -> right;
-            while(tmp -> left) tmp = tmp -> left;
-            return tmp;
-        } else { // has only left child
-            return node -> left;
-        }
-    } else if(node -> right) { // has only right child
-        return node -> right;
-    } else return NULL; // leaf
-}
-//*/
-
 // Replace the subtree rooted at node u with the subtree rooted at node v
 void Tree::transplant(Node* u, Node* v) {
     if(u -> parent == NULL) root = v;
@@ -384,13 +352,12 @@ void Tree::deleteNode(Node* node) {
 
     updateSize(v); // update sizes
 
-    if(flagv) {
+    if(flagv && (v -> parent != NULL)) {
         if(v -> isLeftChild()) {
             v -> parent -> left = NULL;
         } else {
             v -> parent -> right = NULL;
         }
-
     }
 
     nil = 0;
@@ -401,6 +368,8 @@ void Tree::deleteNode(Node* node) {
 
 // Fix tree on deletion
 void Tree::deleteFixUp(Node* node) {
+    if(node != NULL && node -> data < 0) root = NULL;
+
     if(node == root || node -> color == RED) {
         node -> color = BLACK;
         return;
@@ -581,8 +550,11 @@ int Tree::select(int i) {
 
 Tree tree;
 
+vector<int> vec;
+
 void init() { // initialize
     tree = Tree();
+    vec.clear();
 }
 
 // Insert x to the tree
@@ -600,30 +572,66 @@ int os_delete(int x) {
 }
 
 int os_select(int i) { // select i-th element
-    return -1;
+    return tree.select(i);
 }
 
 int os_rank(int x) { // rank of element with key x
-	return -1;
+	return tree.rank(x);
+}
+
+int check_insert(int x) {
+    for(auto v : vec) {
+        if(v == x) return 0;
+    }
+    vec.push_back(x);
+    return x;
+}
+
+int check_delete(int x) {
+    for(int i = 0; i < vec.size(); ++i) {
+        if(x == vec[i]) {
+            int tmp = vec[vec.size() - 1];
+            vec[vec.size() - 1] = x;
+            vec[i] = tmp;
+            vec.pop_back();
+            return x;
+        }
+    }
+    return 0;
+}
+
+int check_select(int x) {
+    if(x <= vec.size()) {
+        sort(vec.begin(), vec.end());
+        return vec[x - 1];
+    } else return 0;
+}
+
+int check_rank(int x) {
+    sort(vec.begin(), vec.end());
+    for(int i = 0; i < vec.size(); ++i) {
+        if(vec[i] == x) return i + 1;
+    }
+    return 0;
 }
 
 bool check(int opt_seq[], int in_seq[], int out_seq[], int n){
     init();
     for(int i = 0; i < n; ++i) {
 		if(opt_seq[i] == 0) {
-            if(os_insert(in_seq[i]) != out_seq[i]) {
+            if(check_insert(in_seq[i]) != out_seq[i]) {
                 return false;
             }
         } else if(opt_seq[i] == 1) {
-            if(os_delete(in_seq[i]) != out_seq[i]) {
+            if(check_delete(in_seq[i]) != out_seq[i]) {
                 return false;
             }
         } else if(opt_seq[i] == 2) {
-            if(os_select(in_seq[i]) != out_seq[i]) {
+            if(check_select(in_seq[i]) != out_seq[i]) {
                 return false;
             }
         } else if(opt_seq[i] == 3) {
-            if(os_rank(in_seq[i]) != out_seq[i]) {
+            if(check_rank(in_seq[i]) != out_seq[i]) {
                 return false;
             }
         }
