@@ -474,7 +474,7 @@ void Tree::inOrder(Node* node) {
 }
 
 void Tree::printSideways(Node* node, string& indent) {
-    string str = indent + "        ";
+    string str = indent + "     ";
     if(node != NIL) {
     // if(node != NULL) {
         printSideways(node -> right, str);
@@ -602,35 +602,23 @@ int check_rank(int x) {
     return 0;
 }
 
-bool check(int opt_seq[], int in_seq[], int out_seq[], int n){
-    // init();
+bool check(int opt_seq[], int in_seq[], int out_seq[], int n) {
     string str = "";
     for(int i = 0; i < n; ++i) {
 		if(opt_seq[i] == 0) {
             if(check_insert(in_seq[i]) != out_seq[i]) {
-                printf("%d: WA on I %d\n", i, in_seq[i]);
-                // tree.printSideways(tree.getRoot(), str);
                 return false;
             }
         } else if(opt_seq[i] == 1) {
             if(check_delete(in_seq[i]) != out_seq[i]) {
-                printf("%d: WA on D %d\n", i, in_seq[i]);
-                // tree.printSideways(tree.getRoot(), str);
-
                 return false;
             }
         } else if(opt_seq[i] == 2) {
             if(check_select(in_seq[i]) != out_seq[i]) {
-                printf("%d: WA on S %d\n", i, in_seq[i]);
-                // tree.printSideways(tree.getRoot(), str);
-
                 return false;
             }
         } else if(opt_seq[i] == 3) {
             if(check_rank(in_seq[i]) != out_seq[i]) {
-                printf("%d: WA on R %d\n", i, in_seq[i]);
-                // tree.printSideways(tree.getRoot(), str);
-
                 return false;
             }
         }

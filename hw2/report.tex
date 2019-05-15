@@ -2,7 +2,7 @@
 \usepackage{geometry}
 \usepackage{xcolor}
 \usepackage{listings}
-
+\usepackage{graphicx}
 \geometry{
 	top = 20mm,
 	left = 25mm,
@@ -25,7 +25,28 @@
 	numberstyle=\tiny\color{mGray},
 	stringstyle=\color{mGreen},
 	basicstyle=\ttfamily\footnotesize,
-	emph = {randkth, randomized\_partition, srand, time, rand, swap, randomized\_select, deterministic\_select, detkth, checker, malloc, partition, median, printf},
+	emph = {},
+	emphstyle=\color{red},
+	breakatwhitespace=false,         
+	breaklines=true,                 
+	captionpos=b,                    
+	keepspaces=true,                 
+	numbers=left,                    
+	numbersep=10pt,                  
+	showspaces=false,                
+	showstringspaces=false,
+	showtabs=false,                  
+	tabsize=4,
+	language=C++,
+}
+
+\lstdefinestyle{PyStyle}{
+	commentstyle=\color{mGreen},
+	keywordstyle=\color{mPurple},
+	numberstyle=\tiny\color{mGray},
+	stringstyle=\color{mGreen},
+	basicstyle=\ttfamily\footnotesize,
+	emph = {},
 	emphstyle=\color{red},
 	breakatwhitespace=false,         
 	breaklines=true,                 
@@ -37,7 +58,7 @@
 	showstringspaces=false,
 	showtabs=false,                  
 	tabsize=4,
-	language=C++,
+	language=Python,
 }
 
 %opening
@@ -50,152 +71,104 @@
 \tableofcontents
 
 \section{Introduction}
-In this homework, we implement the randomized and deterministic selection algorithms with C++ language. The deterministic selection algorithm must run in $O(n)$ time. Given $n$ elements in an array and an integer $k$ ($0\leq k < n$), the algorithm must find the $k$-th smallest element in the array.\footnote{For simplicity in programming, we will count from 0.} Additionally, we implement a checker program for the correctness for the implemented algorithms. The following are required:
+In this homework, we implement an \textbf{order statistic red black tree} with C++ language using data structure augmentation. Compared to normal red black trees, order statistics tree will contain an additional field \textit{size} in each node $v$, which keeps track of the number of nodes in the subtree with root $v$. Additionally, we implement a checker program for the correctness for the implemented data structure and operations. The implemented tree should support the following operations:
 \begin{itemize}
-	\item Implement the randomized and deterministic selection algorithms.
-	\item Run each algorithm for given inputs, measure the running time, print the $k$-th smallest element.
-	\item Check the correctness of each algorithm by using a checker program that runs in $O(n)$ time. Print the result of checking.
-	\item After measuring the running time for inputs of various sizes, compute the ratios of the constant hidden in the asymptotic complexities of each algorithm.
+	\item \textsc{OS-Insert}$(T, x)$: Insert $x$ into $T$. If $x$ already exists in $T$, return 0. Otherwise, return $x$.
+	\item \textsc{OS-Delete}$(T, x)$: Delete $x$ from $T$. If $x$ is not in $T$, return 0. Otherwise, return $x$.
+	\item \textsc{OS-Select}$(T, i)$: Select the $i$-th smallest key from $T$ and return it. If $i$ is greater than the number of keys currently in $T$, return 0.
+	\item \textsc{OS-Rank}$(T, x)$: Return the rank of $x$ if $x$ is in $T$. Otherwise, return 0.
 \end{itemize}
 The following are the restrictions on given inputs.
 \begin{itemize}
-	\item $n, k$ are integers, with $1\leq n\leq 1,000,000,000$, $0\leq k < n$.
-	\item All the elements given in the array are distinct.\footnote{This condition is required for the deterministic selection algorithm to run in $O(n)$ time.}
+	\item Each operation will be denoted as I, D, S, R respectively.
+	\item $1\leq x \leq 9999$.
+	\item Input will be given in the form ``[Character representing the operation] [x]".
 \end{itemize}
 
 \section{Implementation}
-In this section, we will cover the implementation of each algorithm. The basic idea is divide and conquer. Select a pivot and partition the given array into subproblems. The two algorithms discussed here differs only on the method of selecting the pivot.\\
-For the codes, assume the necessary header files are already included.
-\subsection{Randomized Select}
-\begin{lstlisting}[style=Cstyle]
-	int randomized_select(int a[], int n, int k) {
-		return randkth(a, 0, n - 1, k + 1);
-	}
-\end{lstlisting}
-The \textsc{Randomized-Select} algorithm chooses a pivot randomly from the array. The algorithm is implemented in \texttt{randkth} method. \texttt{randkth(arr, st, ed, k)} will return the $k$-th smallest element from \texttt{arr[st..ed]}.\footnote{\texttt{A[i..j]} denotes the elements from \texttt{A[i]}, ..., \texttt{A[j]}.}
-\begin{lstlisting}[style=Cstyle]
-	int randkth(int arr[], int st, int ed, int k) {
-		if(st == ed) // base case for recursion
-			return arr[st];
-		int pivot = randomized_partition(arr, st, ed); // index of pivot
-		
-		// index of pivot from strarting from st
-		int idx = pivot - st + 1; 
-		
-		// Divide and Conquer
-		if(k < idx) // search left
-			return randkth(arr, st, pivot - 1, k);
-		else if(k > idx) // search right
-			return randkth(arr, pivot + 1, ed, k - idx);
-		else // element is found
-			return arr[pivot];
-	}
-\end{lstlisting}~\\
-For \texttt{randomized\_partition}, select a random index from \texttt{st..ed} and use it as a pivot.
-\begin{lstlisting}[style=Cstyle]
-	int randomized_partition(int arr[], int st, int ed) {
-		srand(time(NULL));
-		int pIdx = st + rand() % (ed - st + 1); // random index
-		swap(arr, ed, pIdx); // put it at the end of array
-		int x = arr[ed]; // pivot element
-		int i = st - 1; // track the correct place of pivot
-		for(int j = st; j < ed; ++j) {
-			if(arr[j] <= x)
-				swap(arr, ++i, j); // increment i then swap
-		}
-		swap(arr, ++i, ed); // put pivot at correct place
-		return i;
-	}
-\end{lstlisting}~\\
-\texttt{swap(A, i, j)} will swap \texttt{A[i]} and \texttt{A[j]}. Its implementation is trivial, so we omit it here.\\
-According to the CLRS textbook, the above algorithm will run in expected $O(n)$ time. But the worst case complexity is $O(n^2)$, since we get extremely unlucky by the random function choosing the smallest/largest element from \texttt{A[st..ed]}. That choice of pivot will lead to an unbalanced partition of input array.\\
-
-\subsection{Deterministic Select}
-\begin{lstlisting}[style=Cstyle]
-	int deterministic_select(int a[], int n, int k) {
-		return detkth(a, 0, n - 1, k + 1);
-	}
-\end{lstlisting}
-The deterministic selection algorithm chooses a pivot by using ``median of medians". First divide the array into $\lceil n/5\rceil$ sub-arrays, each with 5 elements, except for the last sub-array. Then choose a median from each sub-array and from the chosen medians, choose a median and use it as the pivot for partition. \texttt{detkth(arr, st, ed, k)} will return the $k$-th smallest element from \texttt{arr[st..ed]}.
-\begin{lstlisting}[style=Cstyle]
-	int detkth(int arr[], int st, int ed, int k) {
-	    if(st == ed) // base case
-	    	return arr[st];
-		int n = ed - st + 1; // number of elements
-		
-		// array for storing medians of each sub-array
-		int* med = (int*) malloc((n + 4) / 5 * sizeof(int));
-		// find medians of each subarray
-		int i;
-		for(i = 0; i < n / 5; ++i)
-			med[i] = median(arr + st + 5 * i, 5);
-		if(5 * i < n) {
-			med[i] = median(arr + st + 5 * i, n % 5);
-			i++;
-		}
-		
-		// choose median of medians
-		int medOfMed = (i == 1) ? med[i-1] : detkth(med, 0, i-1, i/2);
-		
-		// partition the array with median of medians
-		int pivot = partition(arr, st, ed, medOfMed);
-		int idx = pivot - st + 1;
-		
-		// divide and conquer
-		if(idx == k)
-			return arr[pivot];
-		else if(idx > k)
-			return detkth(arr, st, pivot - 1, k);
-		else
-			return detkth(arr, pivot + 1, ed, k - idx);
-	}
-\end{lstlisting}~\\
-\texttt{i == 1} in line 18 was to handle the case with the input array size less than 6. To find the median for each sub-array, \texttt{median(arr, n)} method was called, and it will find the median of $n$ elements starting from \texttt{arr} (pointer) by insertion sort.
-\begin{lstlisting}[style=Cstyle]
-	int median(int arr[], int n) {
-		for(int i = 1; i < n; i++) {
-			for(int j = i; j > 0; j--) {
-				if(arr[j] < arr[j - 1]) swap(arr, j, j - 1);    
-				else break;
-			}
-		}
-		return arr[n / 2];
-	}
-\end{lstlisting}~\\
-\texttt{partition} process is done similarly.
-\begin{lstlisting}[style=Cstyle]
-	int partition(int arr[], int st, int ed, int x) {
-		// search for x in arr, and move it to the end
-		int i;
-		for(i = st; i < ed; ++i) {
-			if(arr[i] == x) break;
-		}
-		swap(arr, i, ed);
-		i = st - 1;
-		for(int j = st; j < ed; ++j) {
-			if(arr[j] <= x) // increment i then swap arr[i] and arr[j]
-				swap(arr, ++i, j);	
-		}
-		swap(arr, ++i, ed);
-		return i;
-	}
-\end{lstlisting}~\\
-According to the textbook, the above algorithm will run in $O(n)$ time.\\
+The basic operations required for the tree was implemented as the same way in the textbook, so we omit it here.
 
 \subsection{Checker}
-To check the correctness, we implement a checker program. The basic idea is to count the number of elements less than or equal to the return value of above algorithms.
+To check the correctness, we implement a checker program. The basic idea is to use a \texttt{vector<int> vec} to keep track of the set of integers given as input.
+\begin{itemize}
+	\item \texttt{check\_insert(int x)} will traverse \texttt{vec} and check if \texttt{x} is already in the vector. If it is, immediately return \texttt{0}. If it is not found, \texttt{push\_back x} and return \texttt{x}.
 \begin{lstlisting}[style=Cstyle]
-	bool checker(int a[], int n, int k, int ans){
-		int cnt = 0;
-		for(int i = 0; i < n; ++i) {
-			if(ans >= a[i]) cnt++; // count elements
-		}
-		if(cnt == k) // cnt must be k to be true
-			return true;
-		else return false;
+int check_insert(int x) {
+	for(auto v : vec) {
+		if(v == x) return 0;
 	}
-\end{lstlisting}~\\
-This checker runs in $O(n)$ time because it sweeps the given array and compares each element with \texttt{ans}.
+	vec.push_back(x);
+	return x;
+}
+\end{lstlisting} 
+	\item \texttt{check\_delete(int x)} will traverse \texttt{vec} and check if \texttt{x} is already in the vector. If it is, swap it with the last element of \texttt{vec}, \texttt{pop\_back}, and return \texttt{x}. If it is not found, return \texttt{0}.
+\begin{lstlisting}[style=Cstyle]
+int check_delete(int x) {
+	for(int i = 0; i < vec.size(); ++i) {
+		if(x == vec[i]) {
+			int tmp = vec[vec.size() - 1];
+			vec[vec.size() - 1] = x;
+			vec[i] = tmp;
+			vec.pop_back();
+			return x;
+		}
+	}
+	return 0;
+}
+\end{lstlisting}
+
+\item \texttt{check\_select(int x)} will first check if \texttt{x} is less then the size of \texttt{vec}. If it is, sort the vector and return \texttt{vec[x - 1]}. Else, return \texttt{0}.
+\begin{lstlisting}[style=Cstyle]
+int check_select(int x) {
+	if(x <= vec.size()) {
+		sort(vec.begin(), vec.end());
+		return vec[x - 1];
+	} else return 0;
+}
+\end{lstlisting}
+
+\item \texttt{check\_rank(int x)} will sort the vector and then traverse the list. If \texttt{x} is found, return the (index of \texttt{x}) + 1. If it is not found, return \texttt{0}.
+\begin{lstlisting}[style=Cstyle]
+int check_rank(int x) {
+	sort(vec.begin(), vec.end());
+	for(int i = 0; i < vec.size(); ++i) {
+		if(vec[i] == x) return i + 1;
+	}
+	return 0;
+}
+
+\end{lstlisting}
+\end{itemize}
+And here is the checker code. Interpret \texttt{opt\_seq} and perform \texttt{check\_[op]}, then compare it with the given \texttt{out\_seq}. If the result doesn't match in any point in time, return \texttt{false}.
+\begin{lstlisting}[style=Cstyle]
+bool check(int opt_seq[], int in_seq[], int out_seq[], int n) {
+	string str = "";
+	for(int i = 0; i < n; ++i) {
+		if(opt_seq[i] == 0) {
+			if(check_insert(in_seq[i]) != out_seq[i]) {
+				printf("%d: WA on I %d\n", i, in_seq[i]);
+				return false;
+			}
+		} else if(opt_seq[i] == 1) {
+			if(check_delete(in_seq[i]) != out_seq[i]) {
+				printf("%d: WA on D %d\n", i, in_seq[i]);
+				return false;
+			}
+		} else if(opt_seq[i] == 2) {
+			if(check_select(in_seq[i]) != out_seq[i]) {
+				printf("%d: WA on S %d\n", i, in_seq[i]);
+				return false;
+			}
+		} else if(opt_seq[i] == 3) {
+			if(check_rank(in_seq[i]) != out_seq[i]) {
+				printf("%d: WA on R %d\n", i, in_seq[i]);
+				return false;
+			}
+		}
+	}
+	return true;
+}
+\end{lstlisting}
 
 \section{Experiments}
 Here is how the test was done.
@@ -205,79 +178,180 @@ Here is how the test was done.
 		\item OS: Ubuntu 18.04.2 LTS
 		\item CPU: Intel® Core™ i5-6200U CPU @ 2.30GHz $\times$ 4
 		\item RAM: 8GB  
-	\end{itemize} 
+	\end{itemize}
+	\item Test Case Generator (Python)\\
+	We keep the numbers small so that the numbers generated in the test will overlap easily, which will cause more operations to return some value other than 0.
+	\begin{lstlisting}[style=PyStyle]
+	from random import randint
+	
+	# Select random element from list
+	def rndselect(list):
+		idx = randint(0, len(list) - 1)
+		return list[idx]
+	
+	# Number of Test Cases
+	N = 100000
+	
+	# Operation set
+	op_set = ['I', 'D', 'R', 'S']
+	
+	# Numbers
+	num = [str(i) for i in range(1, 100)]
+	
+	# Create input text file
+	f = open('tests/input', "w")
+	
+	# Write to test file
+	f.write(str(N) + "\n")
+	for i in range(N):
+		f.write(rndselect(op_set))
+		f.write(' ')
+		f.write(rndselect(num))
+		f.write('\n')
+	f.close()
+	\end{lstlisting}
 	\item Checker Code\\
-	\texttt{chrono} header file was used to check the wall clock.
+	This is the checker code I implemented, to check the correctness of my implementation. An helper function \texttt{printSideways} was used to examine the tree structure easily.
 	\begin{lstlisting}[style=Cstyle]
-	#include <chrono>
-	using namespace std::chrono;
-	... // get input and etc. omitted here
-	auto start = high_resolution_clock::now(); // start time
-	int ans1 = randomized_select(arr, n, k);
-	auto stop = high_resolution_clock::now(); // end time
+	#include <cstdio>
+	#include "hw2_cpp.h"
+	#define N 101010
 	
-	// check correctness
-	if(checker(arr, n, k, ans1)) printf("%s","correct");
-	else printf("%s","incorrect");
+	extern Tree tree; // Tree defined in hw2_cpp.h
 	
-	auto duration = duration_cast<microseconds>(stop - start);
-	printf(", Execution time ");
-	std::cout << duration.count() / 1000.0 << " ms\n";
+	int opt_seq[N], in_seq[N], out_seq[N];
+	
+	int main() {
+		string str = "";
+	
+		freopen("./tests/input", "r", stdin);
+		string op;
+		int x, t;
+		cin >> t;
+		for(int i = 0; i < t; ++i) {
+			cin >> op >> x;
+			in_seq[i] = x;
+			printf("%d. %c %d : ", i + 1, op[0], x);
+			if(op[0] == 'I') {
+				opt_seq[i] = 0;
+				out_seq[i] = os_insert(x);
+			} else if(op[0] == 'D') {
+				opt_seq[i] = 1;
+				out_seq[i] = os_delete(x);
+			} else if(op[0] == 'S') {
+				opt_seq[i] = 2;
+				out_seq[i] = os_select(x);
+			} else if(op[0] == 'R') {
+				opt_seq[i] = 3;
+				out_seq[i] = os_rank(x);
+			}
+			printf("%d\n", out_seq[i]);
+			tree.printSideways(tree.getRoot(), str);
+		}
+		
+		puts("Checking...");
+		if(check(opt_seq, in_seq, out_seq, t)) puts("correct");
+		else puts("incorrect");
+	}
 \end{lstlisting}
-	Similar code was also run for \texttt{deterministic\_select} algorithm.
-	\item The checker code was saved to \texttt{checker.cpp}.
+	\item \texttt{printSideways} function\\
+	Prints the \textit{data} and \textit{size} of each node, with colors embedded.
+\begin{lstlisting}[style=Cstyle]
+void Tree::printSideways(Node* node, string& indent) {
+	string str = indent + "        ";
+	if(node != NIL) {
+		printSideways(node -> right, str);
+		if(node -> color == RED) {
+			cout << indent;
+			printf("\033[1;31m(%d / %d)\033[0m\n", node -> data, node -> size);
+		} else {
+			cout << indent;
+			printf("\033[1;30m(%d / %d)\033[0m\n", node -> data, node -> size);
+		}
+		printSideways(node -> left, str);
+	}
+}
+\end{lstlisting}
+	\item Test case generator code was saved to \texttt{tester.py}, the checker code was saved to \texttt{os\_test.cpp}.
 	\begin{itemize}
-		\item Compile: \texttt{g++ check.cpp -o check}
-		\item Run: \texttt{./check.cpp < 1.txt}
+		\item Generate Test: \texttt{python3 tester.py}
+		\item Compile: \texttt{g++ os\_test.cpp -o test}
+		\item Run: \texttt{./test}
 	\end{itemize}
 \end{itemize}
-There were no reports of incorrectness during the following experiments.
 
-\subsection{Randomized Select}
-Since the running time of randomized algorithms differ for every execution, we ran the algorithm 10,000 times and take the average execution time.\\
-\begin{center}
-	\begin{tabular}{|c|c|c|c|c|}
-		\hline
-		Array Size ($n$) & 20,000 & 60,000 & 200,000 & 600,000 \\\hline
-		Average Time (ms) & 0.363094 & 0.926259 & 1.955946 & 9.627423 \\\hline
-	\end{tabular}\\\vspace{0.5em}
-{\small Table 1: Average running time of \textsc{Randomized-Select} algorithm}
-\end{center}
-The estimated complexity is $T(n) = 0.01615n - 335.4$ ($\mu s$), with $R^2= 0.9789$. The $R^2$ value is less than the deterministic select due to the randomness of the algorithm.
-\subsection{Deterministic Select}
-The running time for deterministic algorithm does not differ very much. We ran it once here.
-\begin{center}
-	\begin{tabular}{|c|c|c|c|c|}
-		\hline
-		Array Size ($n$) & 20,000 & 60,000 & 200,000 & 600,000 \\\hline
-		Time (ms) & 1.922 & 6.265 & 17.785 & 54.067 \\ \hline
-	\end{tabular}\\\vspace{0.5em}
-{\small Table 2: Running time of deterministic select algorithm}
-\end{center}
-The estimated complexity is $T(n) = 0.09034n + 269.3$ ($\mu s$), with $R^2 = 0.9996$.\\
-Just for curiosity, we ran the program 1,000 times to see the average.
+\subsection{Test Case \#1}
+I tried a small test case first, with small numbers.\\
+10\quad
+I 3\quad
+I 13\quad
+I 2\quad
+S 1\quad
+R 6\quad
+R 5\quad
+D 10\quad
+I 17\quad
+I 7\quad
+I 8\quad\\
+Here is the structure of the tree after each operation.
+Each node is represented by $(key / size)$. The leftmost node is the root, and by each column, the nodes in the next level are shown.
+\pagebreak
+\begin{figure}[h!]
+	\begin{center}
+		\includegraphics[width=4.5cm, height=10cm]{pic/test1-1.png}
+		\includegraphics[width=7cm, height=14cm]{pic/test1-2.png}
+		\caption{Result of Test 1}
+	\end{center}
 
-\begin{center}
-	\begin{tabular}{|c|c|c|c|c|}
-		\hline
-		Array Size ($n$) & 20,000 & 60,000 & 200,000 & 600,000 \\\hline
-		Average Time (ms) & 0.902151 & 2.726879 & 10.423119 & 31.067172 \\ \hline
-	\end{tabular}\\\vspace{0.5em}
-{\small Table 3: Average running time of deterministic select algorithm}
-\end{center}
-It can be easily seen that the deterministic algorithm show linearity. 
-
-
+\end{figure}
+\subsection{Test Case \#2}
+For the second case, I tried a case with size 30.\\
+30\quad
+I 9\quad
+I 1\quad
+S 12\quad
+R 19\quad
+R 14\quad
+S 6\quad
+S 11\quad
+R 9\quad
+I 3\quad
+D 10\quad
+S 5\quad
+S 17\quad
+D 13\quad
+I 19\quad
+I 19\quad
+S 6\quad
+R 3\quad
+S 7\quad
+I 1\quad
+S 10\quad
+R 8\quad
+I 3\quad
+I 10\quad
+I 2\quad
+I 11\quad
+I 15\quad
+I 13\quad
+I 16\quad
+R 15\quad
+D 6\\
+\pagebreak
+\begin{figure}[h!]
+	\begin{center}
+		\includegraphics[width=4cm, height=10cm]{pic/test2-1.png}
+		\includegraphics[width=4cm, height=10cm]{pic/test2-2.png}
+		\includegraphics[width=4cm, height=10cm]{pic/test2-3.png}
+		\includegraphics[width=4cm, height=12cm]{pic/test2-4.png}
+		\includegraphics[width=4cm, height=12cm]{pic/test2-5.png}
+		\includegraphics[width=4cm, height=12cm]{pic/test2-6.png}
+		\caption{Result of Test 2}
+	\end{center}
+\end{figure}
+\pagebreak
+\\
+I ran many other cases, up to $100000$ operations. They were all correct.
 \section{Conclusion}
-We calculated the ratio of running times by dividing the results of Table 2 by Table 1, for each $n$.
-\begin{center}
-	\begin{tabular}{|c|c|c|c|c|}
-		\hline
-		Array Size ($n$) & 20,000 & 60,000 & 200,000 & 600,000 \\\hline
-		Ratio & 5.293 & 6.764 & 9.093 & 5.616 \\ \hline
-	\end{tabular}\\\vspace{0.5em}
-	{\small Table 4: Ratio of running times for each $n$}
-\end{center}
-With only the leading coefficients of the complexities for each algorithm, we can see that the ratio is $0.09034 / 0.01615 = 5.593808$. We conclude that the deterministic selection algorithm is around 5.5 times slower than the randomized selection algorithm.
-
+In this homework, I learned how to augment data structures to contain additional information, that will help me retrieve particular information. With the augmented data structure, the additional field could be calculated in $O(1)$ time, since it only needs the information from left/right child. In total, \texttt{rank}, \texttt{select} takes $O(\log n)$ time with the order statistics tree, since the height of a red black tree is at most $O(\log n)$.
 \end{document}

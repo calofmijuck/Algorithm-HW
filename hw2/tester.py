@@ -6,7 +6,7 @@ def rndselect(list):
     return list[idx]
 
 # Number of lines
-N = 10000
+N = 30
 
 # Operation set
 # op_set = ['I']
@@ -14,7 +14,7 @@ N = 10000
 op_set = ['I', 'I', 'D', 'R', 'S']
 
 # Numbers
-num = [str(i) for i in range(1, 100)]
+num = [str(i) for i in range(1, 20)]
 
 # Create input text file
 f = open('tests/input', "w")
