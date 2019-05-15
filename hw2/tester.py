@@ -6,15 +6,15 @@ def rndselect(list):
     return list[idx]
 
 # Number of lines
-N = 100
+N = 10000
 
 # Operation set
 # op_set = ['I']
-op_set = ['I', 'D']
-# op_set = ['I', 'I', 'D', 'R', 'S']
+# op_set = ['I', 'D']
+op_set = ['I', 'I', 'D', 'R', 'S']
 
 # Numbers
-num = [str(i) for i in range(1, 50)]
+num = [str(i) for i in range(1, 100)]
 
 # Create input text file
 f = open('tests/input', "w")
