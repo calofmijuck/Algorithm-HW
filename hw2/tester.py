@@ -6,12 +6,12 @@ def rndselect(list):
     return list[idx]
 
 # Number of lines
-N = 75
+N = 100
 
 # Operation set
-op_set = ['I']
-# op_set = ['I', 'D']
-# op_set = ['I', 'D', 'R', 'S']
+# op_set = ['I']
+op_set = ['I', 'D']
+# op_set = ['I', 'I', 'D', 'R', 'S']
 
 # Numbers
 num = [str(i) for i in range(1, 50)]
@@ -27,14 +27,15 @@ for i in range(N):
     f.write(rndselect(num))
     f.write('\n')
 
-M = 50
-op_set2 = ['R', 'S']
 
-f.write(str(M) + "\n")
-for i in range(M):
-    f.write(rndselect(op_set2))
-    f.write(' ')
-    f.write(rndselect(num))
-    f.write('\n')
+# M = 50
+# op_set2 = ['R', 'S']
+#
+# f.write(str(M) + "\n")
+# for i in range(M):
+#     f.write(rndselect(op_set2))
+#     f.write(' ')
+#     f.write(rndselect(num))
+#     f.write('\n')
 
 f.close()

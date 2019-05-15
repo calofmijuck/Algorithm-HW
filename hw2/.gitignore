@@ -1,0 +1,10 @@
+main
+main.cpp
+*.aux
+*.log
+*.synctex.gz
+*.toc
+test
+tester
+tester.py
+tmp.cpp

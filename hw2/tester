@@ -1,4 +1,4 @@
 # Run Tester
 python3 tester.py
-g++ test.cpp -o test
+g++ os_test.cpp -o test
 ./test

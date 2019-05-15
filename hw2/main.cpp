@@ -1,5 +1,8 @@
 #include <cstdio>
+#include <iostream>
 #include "hw2_cpp.h"
+
+extern Tree tree;
 
 int main() {
     // 0 : insert
@@ -8,7 +11,7 @@ int main() {
     // 3 : rank
     int opt_seq[5] = { 0, 0, 0, 0, 0 };
     int in_seq[5] = { 1, 2, 3, 3, 1 };
-    int out_seq[5] = { 1, 2, 3, 0, 1}; // 4th element 1 -> 0
+    int out_seq[5] = { 1, 2, 3, 0, 0}; // 4th element 1 -> 0
 
     if(check(opt_seq, in_seq, out_seq, 5)) {
         printf("correct\n");
@@ -22,6 +25,7 @@ int main() {
     int in_seq2[6] = { 1, 1, 1, 2, 1, 2 };
     int out_seq2[6];
     for(int i = 0; i < 6; ++i) {
+        printf("%d\n", i);
         if(opt_seq2[i] == 0) {
             out_seq2[i] = os_insert(in_seq2[i]);
         } else if(opt_seq2[i] == 1) {
@@ -31,8 +35,12 @@ int main() {
         } else {
             out_seq2[i] = os_rank(in_seq2[i]);
         }
+        tree.inOrder(tree.getRoot());
     }
-
+    for(int i = 0; i < 6; ++i) {
+        printf("%d ", out_seq2[i]);
+    }
+    puts("");
     if(check(opt_seq2, in_seq2, out_seq2, 6)) {
         printf("correct\n");
     } else {
