@@ -3,7 +3,7 @@
 
 #include <vector>
 using namespace std;
-
+typedef vector<vector<int>> Graph;
 // parameters
 
 // adj : adjacent list of graph where the smallest element is the 0th element.
@@ -19,23 +19,90 @@ using namespace std;
 
 // This function should return the number of strongly connnected components.
 
-int find_scc_with_adj_list(const vector<vector<int>>& adj, int num_v, int num_e, vector<int>& ans) {
-	ans[0] = 0;
-	ans[1] = 0;
-	ans[2] = 0;
-	ans[3] = 1;
-	return 2;
+vector<bool> visited; // check visited
+int curr_time; // Checks finish time
+vector<int> finished; // Gets vertex that finished at time x
+vector<int> cc; // connected components
+Graph gph, gphT, scc;
+
+void create_transpose(const Graph& adj) {
+	gphT.clear();
+	gphT.resize(adj.size());
+	for(int u = 0; u < adj.size(); ++u) {
+		for(int v : gph[u]) {
+			printf("%d -> %d\n", u, v);
+			gphT[v].push_back(u);
+		}
+	}
+}
+
+void dfs(int v) {
+	visited[v] = true;
+	for(int next : gph[v]) {
+		if(!visited[next]) dfs(next);
+	}
+	finished[++curr_time] = v;
+}
+
+void rdfs(int v, vector<int>& cc) {
+	cc.push_back(v);
+	visited[v] = true;
+	for(int next : gphT[v]) {
+		if(!visited[next]) rdfs(next, cc);
+	}
+}
+
+int find_scc_with_adj_list(const Graph& adj, int num_v, int num_e, vector<int>& ans) {
+	gph = adj;
+	int V = num_v, E = num_e;
+	curr_time = 0;
+
+	scc.clear(); // clear answer
+
+	finished.clear();
+	finished.resize(V + 1, 0);
+
+	visited.clear();
+	visited.resize(V, false);
+
+
+	for(int idx = 0; idx < V; ++idx) {
+		if(!visited[idx]) dfs(idx);
+	}
+
+	visited.clear();
+	visited.resize(V, false);
+
+	create_transpose(adj);
+
+	for(int t = V; t >= 1; --t) {
+		int curr = finished[t];
+		if(!visited[curr]) {
+			cc.clear(); // connected component
+			rdfs(curr, cc);
+			sort(cc.begin(), cc.end());
+			scc.push_back(cc);
+		}
+	}
+
+	sort(scc.begin(), scc.end());
+	// cout << scc.size() << '\n';
+	for(int i = 0; i < scc.size(); ++i) {
+		vector<int> cc = scc[i];
+		for(int curr : cc) {
+			ans[curr] = i;
+			// cout << curr << ' ';
+		}
+		// cout << "-1\n";
+	}
+	return scc.size();
 }
 
 //adj : num_v x num_v dimension adjacency matrix of the given graph
 
 //the other parameters have same as above function.
 
-int find_scc_with_adj_mat(const vector<vector<int>>& adj, int num_v, int num_e, vector<int>& ans) {
-	ans[0] = 0;
-	ans[1] = 0;
-	ans[2] = 0;
-	ans[3] = 1;
+int find_scc_with_adj_mat(const Graph& adj, int num_v, int num_e, vector<int>& ans) {
 	return 2;
 }
 
