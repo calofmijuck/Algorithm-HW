@@ -30,7 +30,7 @@ void create_transpose(const Graph& adj) {
 	gphT.resize(adj.size());
 	for(int u = 0; u < adj.size(); ++u) {
 		for(int v : gph[u]) {
-			printf("%d -> %d\n", u, v);
+			// printf("%d -> %d\n", u, v);
 			gphT[v].push_back(u);
 		}
 	}
@@ -86,16 +86,40 @@ int find_scc_with_adj_list(const Graph& adj, int num_v, int num_e, vector<int>& 
 	}
 
 	sort(scc.begin(), scc.end());
-	// cout << scc.size() << '\n';
 	for(int i = 0; i < scc.size(); ++i) {
 		vector<int> cc = scc[i];
 		for(int curr : cc) {
 			ans[curr] = i;
-			// cout << curr << ' ';
 		}
-		// cout << "-1\n";
 	}
 	return scc.size();
+}
+
+void dfs_mat(int v) {
+	visited[v] = true;
+	for(int i = 0; i < gph[v].size(); ++i) {
+		if(gph[v][i] && !visited[i]) dfs_mat(i);
+	}
+	finished[++curr_time] = v;
+}
+
+void rdfs_mat(int v, vector<int>& cc) {
+	cc.push_back(v);
+	visited[v] = true;
+	for(int i = 0; i < gphT[v].size(); ++i) {
+		if(gphT[v][i] && !visited[i]) rdfs_mat(i, cc);
+	}
+}
+
+void create_transpose_mat(const Graph& adj) {
+	gphT.clear();
+	int V = adj.size();
+	gphT.resize(V);
+	for(int i = 0; i < V; ++i) {
+		for(int j = 0; j < V; ++j) {
+			gphT[i].push_back(gph[j][i]);
+		}
+	}
 }
 
 //adj : num_v x num_v dimension adjacency matrix of the given graph
@@ -103,7 +127,45 @@ int find_scc_with_adj_list(const Graph& adj, int num_v, int num_e, vector<int>& 
 //the other parameters have same as above function.
 
 int find_scc_with_adj_mat(const Graph& adj, int num_v, int num_e, vector<int>& ans) {
-	return 2;
+	gph = adj;
+	int V = num_v, E = num_e;
+	curr_time = 0;
+
+	scc.clear(); // clear answer
+
+	finished.clear();
+	finished.resize(V + 1, 0);
+
+	visited.clear();
+	visited.resize(V, false);
+
+	for(int idx = 0; idx < V; ++idx) {
+		if(!visited[idx]) dfs_mat(idx);
+	}
+
+	visited.clear();
+	visited.resize(V, false);
+
+	create_transpose_mat(adj);
+
+	for(int t = V; t >= 1; --t) {
+		int curr = finished[t];
+		if(!visited[curr]) {
+			cc.clear(); // connected component
+			rdfs_mat(curr, cc);
+			sort(cc.begin(), cc.end());
+			scc.push_back(cc);
+		}
+	}
+
+	sort(scc.begin(), scc.end());
+	for(int i = 0; i < scc.size(); ++i) {
+		vector<int> cc = scc[i];
+		for(int curr : cc) {
+			ans[curr] = i;
+		}
+	}
+	return scc.size();
 }
 
 
