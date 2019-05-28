@@ -25,17 +25,18 @@ vector<int> finished; // Gets vertex that finished at time x
 vector<int> cc; // connected components
 Graph gph, gphT, scc;
 
+// tranpose of adjacency list
 void create_transpose(const Graph& adj) {
 	gphT.clear();
 	gphT.resize(adj.size());
 	for(int u = 0; u < adj.size(); ++u) {
 		for(int v : gph[u]) {
-			// printf("%d -> %d\n", u, v);
 			gphT[v].push_back(u);
 		}
 	}
 }
 
+// dfs for adjacency list
 void dfs(int v) {
 	visited[v] = true;
 	for(int next : gph[v]) {
@@ -44,6 +45,7 @@ void dfs(int v) {
 	finished[++curr_time] = v;
 }
 
+// reverse dfs for adjcency list
 void rdfs(int v, vector<int>& cc) {
 	cc.push_back(v);
 	visited[v] = true;
@@ -59,42 +61,48 @@ int find_scc_with_adj_list(const Graph& adj, int num_v, int num_e, vector<int>& 
 
 	scc.clear(); // clear answer
 
+	// initializations
+
 	finished.clear();
 	finished.resize(V + 1, 0);
 
 	visited.clear();
 	visited.resize(V, false);
 
-
+	// DFS on each vertices that have not been visited
 	for(int idx = 0; idx < V; ++idx) {
 		if(!visited[idx]) dfs(idx);
 	}
 
+	// clear visited array
 	visited.clear();
 	visited.resize(V, false);
 
+	// Calculate G transpose
 	create_transpose(adj);
 
+	// DFS in decreasing order of finish time
 	for(int t = V; t >= 1; --t) {
 		int curr = finished[t];
 		if(!visited[curr]) {
 			cc.clear(); // connected component
-			rdfs(curr, cc);
-			sort(cc.begin(), cc.end());
+			rdfs(curr, cc); // reverse dfs
+			sort(cc.begin(), cc.end()); // sort each component
 			scc.push_back(cc);
 		}
 	}
 
-	sort(scc.begin(), scc.end());
+	sort(scc.begin(), scc.end()); // sort the components
 	for(int i = 0; i < scc.size(); ++i) {
 		vector<int> cc = scc[i];
 		for(int curr : cc) {
-			ans[curr] = i;
+			ans[curr] = i; // set ans array
 		}
 	}
-	return scc.size();
+	return scc.size(); // return number of sccs
 }
 
+// dfs for adjacency matrix
 void dfs_mat(int v) {
 	visited[v] = true;
 	for(int i = 0; i < gph[v].size(); ++i) {
@@ -103,6 +111,7 @@ void dfs_mat(int v) {
 	finished[++curr_time] = v;
 }
 
+// reverse dfs for adjaceny matrix
 void rdfs_mat(int v, vector<int>& cc) {
 	cc.push_back(v);
 	visited[v] = true;
@@ -111,6 +120,7 @@ void rdfs_mat(int v, vector<int>& cc) {
 	}
 }
 
+// matrix transpose
 void create_transpose_mat(const Graph& adj) {
 	gphT.clear();
 	int V = adj.size();
@@ -133,39 +143,45 @@ int find_scc_with_adj_mat(const Graph& adj, int num_v, int num_e, vector<int>& a
 
 	scc.clear(); // clear answer
 
+	// initializations
+
 	finished.clear();
 	finished.resize(V + 1, 0);
 
 	visited.clear();
 	visited.resize(V, false);
 
+	// DFS on each vertices that have not been visited
 	for(int idx = 0; idx < V; ++idx) {
 		if(!visited[idx]) dfs_mat(idx);
 	}
 
+	// clear visited array
 	visited.clear();
 	visited.resize(V, false);
 
+	// Calculate G transpose
 	create_transpose_mat(adj);
 
+	// DFS in decreasing order of finish time
 	for(int t = V; t >= 1; --t) {
 		int curr = finished[t];
 		if(!visited[curr]) {
 			cc.clear(); // connected component
 			rdfs_mat(curr, cc);
-			sort(cc.begin(), cc.end());
+			sort(cc.begin(), cc.end()); // sort each component
 			scc.push_back(cc);
 		}
 	}
 
-	sort(scc.begin(), scc.end());
+	sort(scc.begin(), scc.end()); // sort the components
 	for(int i = 0; i < scc.size(); ++i) {
 		vector<int> cc = scc[i];
 		for(int curr : cc) {
-			ans[curr] = i;
+			ans[curr] = i; // set ans array
 		}
 	}
-	return scc.size();
+	return scc.size(); // return number of sccs
 }
 
 
