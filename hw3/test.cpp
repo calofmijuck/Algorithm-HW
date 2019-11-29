@@ -7,7 +7,7 @@ int main() {
     ios_base::sync_with_stdio(false);
     cin.tie(NULL);
 
-    int V, E, deg, u, v;
+    int V, E, u, v;
 
     cin >> V >> E;
 
@@ -15,7 +15,7 @@ int main() {
     vector<vector<int>> mat(V); // Adjacency Matrix
 
     // Adjacency Matrix must be size V * V
-    for(int i = 0; i < V; ++i) mat[i].resize(V);
+    for(int i = 0; i < V; ++i) mat[i].resize(V, 0);
 
     for(int i = 0; i < E; ++i) {
         cin >> u >> v;
@@ -27,25 +27,25 @@ int main() {
 
     int scc1 = find_scc_with_adj_list(adj, V, E, adjans);
 
-    for(int i = 0; i < scc1; ++i) {
-        for(int j = 0; j < V; ++j) {
-            if(adjans[j] == i) {
-                printf("%d ", j);
-            }
-        }
-        puts("");
-    }
+    // for(int i = 0; i < scc1; ++i) {
+    //     for(int j = 0; j < V; ++j) {
+    //         if(adjans[j] == i) {
+    //             printf("%d ", j);
+    //         }
+    //     }
+    //     puts("");
+    // }
 
-    freopen("./output.txt", "w", stdout);
-
-    for(int i = 0; i < adjans.size(); ++i) {
-        printf("%d\n", adjans[i]);
-    }
-
-    // vector<int> matans(V);
+    // freopen("./output_adj.txt", "w", stdout);
     //
-    // int scc2 = find_scc_with_adj_mat(mat, V, E, matans);
-    //
+    // for(int i = 0; i < adjans.size(); ++i) {
+    //     printf("%d\n", adjans[i]);
+    // }
+
+    vector<int> matans(V);
+
+    int scc2 = find_scc_with_adj_mat(mat, V, E, matans);
+
     // for(int i = 0; i < scc2; ++i) {
     //     for(int j = 0; j < V; ++j) {
     //         if(matans[j] == i) {
@@ -54,5 +54,12 @@ int main() {
     //     }
     //     puts("");
     // }
+
+    freopen("./output_mat.txt", "w", stdout);
+
+    for(int i = 0; i < matans.size(); ++i) {
+        printf("%d\n", matans[i]);
+    }
+
     return 0;
 }

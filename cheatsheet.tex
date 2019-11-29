@@ -1,0 +1,141 @@
+\documentclass[10pt]{report}
+\usepackage{geometry}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{multicol}
+\usepackage{xcolor}
+\usepackage{listings}
+\geometry{
+	top = 5mm,
+	left = 5mm,
+	right = 5mm,
+	bottom = 5mm
+}
+\geometry{a4paper}
+\definecolor{mGreen}{rgb}{0,0.6,0}
+\definecolor{mGray}{rgb}{0.5,0.5,0.5}
+\definecolor{mPurple}{rgb}{0.58,0,0.82}
+\definecolor{mRed}{rgb}{1, 0, 0}
+\definecolor{backgroundColour}{rgb}{0.95,0.95,0.92}
+
+\lstdefinestyle{CStyle}{
+	commentstyle=\color{mGreen},
+	keywordstyle=\color{mPurple},
+	numberstyle=\tiny\color{mGray},
+	stringstyle=\color{mGreen},
+	basicstyle=\ttfamily\normalsize,
+	emph = {},
+	emphstyle=\color{red},
+	breakatwhitespace=false,         
+	breaklines=true,                 
+	captionpos=b,                    
+	keepspaces=true,                                   
+	showspaces=false,                
+	showstringspaces=false,
+	showtabs=false,                  
+	tabsize=2,
+	language=C++,
+}
+\begin{document} 
+\begin{multicols}{2}
+\begin{lstlisting}[style=Cstyle]
+matChain(n) { for(i, 1, n) {m[i,i] = 0}
+	for(r, 1, n-1) {
+		for(i, 1, n-r) { j = i + r; 
+	m[i,j] = min(m[i,k]+m[k+1,j]+p[i-1]p[k]p[j])
+		} } (i<=k<=j-1)
+	return m[1, n];}
+\end{lstlisting}
+$$LCS_{ij} = \begin{cases}
+	0 & (i=0 or j=0) \\ C_{i-1, j-1}+1 & (i, j>0, x_i=y_i) \\ \max\{C_{i-1, j}, C_{i, j-1}\} & (i, j > 0, x_i \neq y_i)
+\end{cases}$$
+\begin{lstlisting}[style=Cstyle]
+topSort(G) {
+	for(v:V) visited[v]=F;
+	for(v:V) if(!visited[v]) DFS(v); }
+DFS(v) {
+	visited[v] = T;
+	for(x:N(v)) if(!visited[v]) DFS(x);
+	push v in front of list R}
+\end{lstlisting}
+\begin{lstlisting}[style=Cstyle]
+Prim(G) { Q=V; for(u:Q) d[u]=INF, d[r]=0
+while(!Q.empty) { u = deleteMin(Q, d)
+for(v:N(u)) if(v in Q and w(u, v) < d[v]) 
+	d[v] = w(u, v), tree[v] = u     }}
+\end{lstlisting}
+\begin{lstlisting}[style=Cstyle]
+Dijk(G, r) { S=0, for(u:V){d[u]=INF} d[r]=0
+while(S!=V) { u=extractMin(V-S, d), S.add(u)
+	for(v:N(u)) { 
+	if(v in V-S and d[u] + w(u, v) < d[v]) 
+		d[v] = d[u] + w(u, v), prev[v] = u
+	}}}
+\end{lstlisting}
+$$dp[x] = \min_{(y, x)\in E}\{dp[x], dp[y] + w(y, x)\}$$
+\begin{lstlisting}[style=Cstyle]
+BF(G, r) { for(u:V) d[u]=INF; d[r] = 0;
+for(i, 1, V-1) { for(u,v in E) {
+	if(d[u]+w(u, v) < d[v]) {
+		d[v] = d[u] + w(u,v); prev[v]=u; } }}
+}
+\end{lstlisting}
+$d_{ij}^k$ min.dist.from.$i$to$j$as$\{1...k\}$as intermediate points
+$$d_{ij}^k = \begin{cases}
+	w_{ij} & (k = 1) \\ \min \{d_{ij}^{k-1}, d_{ik}^{k-1} + d_{kj}^{k-1}\} & (k\geq 1)
+\end{cases}$$
+\begin{lstlisting}[style=Cstyle]
+DAG-SP(G, r) { for(u:V) d[u]=INF; d[r] = 0;
+	TopSort. 
+	for(u:V.topsort) { for(v:N(u)) RELAX;}
+}
+\end{lstlisting}
+\begin{lstlisting}[style=Cstyle]
+Sche(S, n) { sort.ascend t_i,rename,T={1},l=1
+for(i,2,n) { if(t_l <= s_i) T.add(i), l = i} }
+\end{lstlisting}
+Suppose there exists an optimal solution not containing $T$. Let $i$ be the meeting that ends first in $T$. Then $T\cup\{1\}-\{i\}$ is also an optimal solution. Thus include 1 and repeat the same procedure for the rest.\\
+$dp[x]$:LIS.len with x as the last element
+\begin{lstlisting}[style=Cstyle]
+LIS { for(i,1,n) {if(dp[i] == 0) dp[i] = 1}
+for(j, 1, i) { if(arr[i] > arr[j]) 
+	dp[i] = max(dp[i], dp[j] + 1)    }}
+\end{lstlisting}
+$$ED(i, j) = \begin{cases}
+	i \quad (j = 0), \quad j \quad (i = 0) \quad ED_{i-1, j-1} \quad (X[i] =Y[j]) \\ 1 + \min\{ED_{i, j-1}, ED_{i-1, j}, ED_{i-1,j-1}\} \quad(otw)
+\end{cases}$$
+Check that the result is a tree, check for each $v$ and $u\in N_G(v)$ that $d(s, u)\geq d(s, v) +w_{uv}$, $d(s, s) = 0$, $d(s, v) = d(s, \pi(v)) + w_{v, \pi(v)}$.\\
+Suppose we are updating $d_{ij}^{(k)}$. Distances either starting or ending in $k$ cannot be improved by looking for a path that travels via $k$. So $d_{ik}, d_{kj}$ do not change. We might accidentally use $d_{ik}^{(k)}$ instead of $d_{ik}^{(k-1)}$. But since $d_{kk}^{(k-1)} = 0$, $d_{ik}^{(k)} = \min\{d_{ik}^{(k-1)}, d_{ik}^{k-1} + d_{kk}^{(k-1)} \} = d_{ik}^{(k-1)}$. Same argument for $d_{kj}^{(k)}$ can be shown.\\
+If a minimal collection of coins doesn't contain any coins of value at least $m_j$, then its total value is at most $m_j-1$. Calculate $\sum_{i=1}^{j-1}(m_{j+1}/m_j - 1)m_j$ to get $m_{j}-1$. If $m_{j}\leq X<m_{j+1}$, must contain $m_j$, and find representation of $X-m_j$.\\
+Knapsack $dp(i, x) = \max\{dp(i+1, x), dp(i+1, X-s_i) + v_i\}$\\
+F-W alg iteratively revises path len between all pairs of vertices $(i, j)$, including where $i=j$. Initially the length of the path $(i, i)$ was 0, but a path $[i, k, \dots, i]$ can only improve upon this if it has length less than zero (negative cycle). Thus after the alg, $(i, i)$ will be negative if there exists a negative cycle from $i$ back to $i$.\\
+\textit{Semi-connected}: Find SCC of the graph, build component graph (DAG), Top.Sort and check if adjacent vertices have an edge between them.\\
+Given DAG, Top.Sort, and check if adjacent vertices have edge. Then it will give an Ham-path. Suppose $(x, y)\notin E$ where $x, y$ are adjacent in the topsort. If Ham.path exists, path $x\rightarrow y$ going through other vertices exist. Then $x\rightarrow \alpha \rightarrow y$ exist and $\alpha$ must be in between $x, y$ in the topsort. Contradiction.\\
+Rabin-Karp: $a_i = d(a_{i-1} -d^{m-1}A[i-1]) + A[i+m-1]$\\
+$b_i = d (b_{i-1}-(d^{m-1} \mod q) A[i-1]) + A[i+m-1] \mod q$\\
+NP: solution can be checked in polynomial time.\\
+A if NP-Hard iff $L\in \rm{NP}$, $L\leq_p A$. NP-Comp. = NP $\cap$ NP-Hard\\
+HAM-CYCLE$\rightarrow$TSP: weight 1 for existing edges, else $\infty$ to obtain a complete graph. Now find a Ham.Cyc. with length less than $|V|$.\\
+HAM-PATH-2$\leq_p$LONGEST-PATH: weight 1 for existing edges. Find simple path of length geq $|V|-1$ from $s$ to $t$.\\
+A*: minimize $g(x)+h(x)$. $h(x)\leq$ real value. $\forall (x, y)\in E$, $h(x)\leq h(y)+w(x, y)$ (Monotonicity)\\
+$L(i,j)=$ length of the longest palindromic subsequence of $X[i..j]$
+$$L(i, j) = \begin{cases}
+	L(i+1, j-1) + 2 & (X[i] = X[j]) \\
+	\max\{L(i+1, j), L(i, j-1)\} & (otw)
+\end{cases}$$
+
+\begin{lstlisting}[style=Cstyle]
+// Init L[i][i]=1
+for (cl=2; cl<=n; cl++) { 
+for (i=0; i<n-cl+1; i++) { j = i+cl-1; 
+if (str[i] == str[j] && cl==2) L[i][j] = 2; 
+else if (str[i] == str[j]) 
+	L[i][j] = L[i+1][j-1] + 2; 
+else
+	L[i][j] = max(L[i][j-1], L[i+1][j]); 
+}} 
+\end{lstlisting}
+\end{multicols}
+
+\end{document}
+
